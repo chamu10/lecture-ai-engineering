@@ -5,6 +5,7 @@ from janome.tokenizer import Tokenizer
 import re
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import TfidfVectorizer
+from textblob import TextBlob
 
 # NLTKのヘルパー関数（エラー時フォールバック付き）
 try:
@@ -92,8 +93,17 @@ def calculate_metrics(answer, correct_answer):
         except Exception as e:
             # st.warning(f"関連性スコア計算エラー: {e}")
             relevance_score = 0.0 # エラー時は0
+        
+        try:
+            blob = TextBlob(tokens)
+            if blob:
+              emotional_score=blob.sentiment.polarity
+            else:
+              emotional_score = 0.0
+        except Exception as e:
+            emotional_score = 0.0
 
-    return bleu_score, similarity_score, word_count, relevance_score
+    return bleu_score, similarity_score, word_count, relevance_score, emotional_score
 
 def get_metrics_descriptions():
     """評価指標の説明を返す"""
@@ -104,5 +114,6 @@ def get_metrics_descriptions():
         "類似度スコア (similarity_score)": "TF-IDFベクトルのコサイン類似度による、正解と回答の意味的な類似性 (0〜1の値)",
         "単語数 (word_count)": "回答に含まれる単語の数。情報量や詳細さの指標",
         "関連性スコア (relevance_score)": "正解と回答の共通単語の割合。トピックの関連性を表す (0〜1の値)",
-        "効率性スコア (efficiency_score)": "正確性を応答時間で割った値。高速で正確な回答ほど高スコア"
+        "効率性スコア (efficiency_score)": "正確性を応答時間で割った値。高速で正確な回答ほど高スコア",
+        "感情スコア (emotional_score)": "回答に対する感情値。ポジティブなほど高スコア"
     }
